@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "mtib.chesspuzzles",
+  "name": "Chess Puzzles",
+  "version": "1.0.0",
+  "author": "mtib",
+  "license": "MIT",
+  "description": "Lichess chess puzzles at a picked difficulty, with caliente piece art, in an Omarchy bar panel.",
+  "kinds": ["bar-widget"],
+  "activation": "on-demand",
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Chess Puzzles",
+    "description": "Pick a difficulty and solve Lichess puzzles from the bar: click a piece, click its square.",
+    "category": "Games",
+    "aliases": ["chess", "puzzles"],
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "elo": 1500
+    },
+    "schema": [
+      {
+        "key": "elo",
+        "type": "integer",
+        "label": "Puzzle ELO",
+        "description": "Target puzzle rating served by the panel's ELO slider.",
+        "min": 600,
+        "max": 2500,
+        "step": 50,
+        "defaultValue": 1500
+      }
+    ]
+  },
+  "homepage": "https://github.com/avi-0/caliente"
+}
