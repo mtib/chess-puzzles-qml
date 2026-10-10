@@ -5,6 +5,8 @@ Quickshell/QML shell plugin — white knight icon in the bar, popup panel with
 a monochrome board, an ELO slider, and Lichess puzzles served from a local
 cache.
 
+![Chess Puzzles QML: monochrome board popup from the Omarchy bar](docs/screenshot.png)
+
 The native Rust + Bevy twin of this plugin lives at
 **[mtib/chess-puzzles-bevy](https://github.com/mtib/chess-puzzles-bevy)** —
 same game logic, same puzzle data, standalone window app.
