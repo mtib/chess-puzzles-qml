@@ -3,9 +3,9 @@
 #
 # Serves from the local cache (one JSON puzzle per line) and avoids the
 # puzzles used most recently. The cache is seeded by seed.py from the Lichess
-# puzzle database; if it is missing or empty, this script falls back to the
-# anonymous Lichess /api/puzzle/next endpoint and appends what it fetched, so
-# the cache grows on its own.
+# puzzle database. There is no live fallback: Lichess's /api/puzzle/next
+# returns the game PGN plus initialPly instead of a FEN, and the panel has no
+# move generator to replay it. An empty cache is reported on stderr.
 #
 # $1 = target ELO
 
@@ -18,20 +18,10 @@ recent="$dir/recent.txt"
 mkdir -p "$dir"
 touch "$cache" "$recent"
 
-# Online fallback + cache refill.
-online_puzzle() {
-  out=$(curl -fsS --max-time 8 "https://lichess.org/api/puzzle/next" 2>/dev/null) || return 1
-  printf '%s' "$out" | jq -ce '[.puzzle |
-    select(.fen != null and .solution != null and (.solution | length) > 0)] |
-    .[0] // empty | {id: (.id|tostring), fen, rating: (.rating // 0),
-      themes: ((.themes // [])[:3]), solution}' >/dev/null 2>&1 || return 1
-  printf '%s\n' "$out" | jq -c '[.puzzle |
-    select(.fen != null and .solution != null and (.solution | length) > 0)][0] |
-    {id: (.id|tostring), fen, rating: (.rating // 0),
-     themes: ((.themes // [])[:3]), solution}'
-}
-
-[ -s "$cache" ] || online_puzzle >>"$cache"
+if [ ! -s "$cache" ]; then
+  echo "Puzzle cache is empty: run python3 $(cd "$(dirname "$0")" && pwd)/seed.py once" >&2
+  exit 1
+fi
 
 pick=$(jq -nc --arg elo "$elo" --rawfile recent "$recent" --rawfile cache "$cache" '
   ($recent | split("\n") | map(select(length > 0))) as $seen
@@ -45,8 +35,7 @@ pick=$(jq -nc --arg elo "$elo" --rawfile recent "$recent" --rawfile cache "$cach
     | .[0] // empty
 ')
 
-# Cache is empty and the network is down: nothing to serve.
-[ -n "$pick" ] || exit 1
+[ -n "$pick" ] || { echo "No usable puzzles in $cache" >&2; exit 1; }
 
 # Record the served id so the next pick is a different puzzle.
 jq -r '.id' <<<"$pick" >>"$recent"

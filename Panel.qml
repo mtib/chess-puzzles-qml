@@ -95,6 +95,7 @@ Panel {
     wrongFlash = -1
     lastMoveFrom = -1
     lastMoveTo = -1
+    fetchError = ""
     fetchProc.command = [
       Quickshell.env("HOME") + "/.config/omarchy/plugins/mtib.chesspuzzles/pick.sh",
       String(targetElo)
@@ -102,10 +103,13 @@ Panel {
     fetchProc.running = true
   }
 
+  property string fetchError: ""
+
   function fetchFailed() {
     phase = "idle"
-    statusLine = "Could not get a puzzle — check the connection"
-    if (fetchRetries < 3) {
+    statusLine = fetchError !== "" ? fetchError : "Could not get a puzzle"
+    // A missing cache won't fix itself, so only retry other failures.
+    if (fetchError === "" && fetchRetries < 3) {
       fetchRetries++
       retryTimer.restart()
     }
@@ -276,6 +280,10 @@ Panel {
 
   Process {
     id: fetchProc
+    stderr: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: root.fetchError = String(text || "").trim().split("\n")[0]
+    }
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: {

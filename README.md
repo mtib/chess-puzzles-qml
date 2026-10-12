@@ -18,8 +18,9 @@ same game logic, same puzzle data, standalone window app.
   recently served.
 - **Offline cache** seeded from the
   [Lichess puzzle database](https://database.lichess.org/) — popular puzzles
-  bucketed across the whole rating range. `pick.sh` falls back to a live
-  Lichess fetch and appends to the cache, so it grows on its own.
+  bucketed across the whole rating range. The cache is required: Lichess's
+  live puzzle API returns a PGN rather than a board position, so there is no
+  online fallback.
 - **Click-click input**, judged against the puzzle's solution list (no move
   generator — the solution is the only judge). Opponent replies auto-play;
   "Show solution" walks the line; wrong attempts flash the target square;
@@ -45,11 +46,24 @@ git clone https://github.com/mtib/chess-puzzles-qml \
 omarchy plugin enable mtib.chesspuzzles
 ```
 
-Then seed the puzzle cache once (optional but recommended):
+Then seed the puzzle cache once. **This is required**, the panel has no
+puzzles until it has run:
 
 ```sh
 python3 ~/.config/omarchy/plugins/mtib.chesspuzzles/seed.py
 ```
+
+It streams the ~300 MB Lichess puzzle database, so it needs `curl` and
+`zstd` and takes under a minute on a fast connection. It keeps about 30
+puzzles per 100-ELO bucket (roughly 700 in total) and can be re-run to add
+more.
+
+### Troubleshooting
+
+- **"Puzzle cache is empty: run python3 …/seed.py once"**: seed the cache as
+  above.
+- **Nothing happens after seeding**: `~/.config/omarchy/plugins/mtib.chesspuzzles/pick.sh 1500`
+  should print one JSON puzzle. It needs `jq`.
 
 State and cache live under `~/.local/state/omarchy/`
 (`chesspuzzles/cache.jsonl`, `settings/chesspuzzles.json`).
